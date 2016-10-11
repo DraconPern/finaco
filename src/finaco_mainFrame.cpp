@@ -41,6 +41,9 @@ mainFrame( parent )
 
 	if(m_engine.patientdata.Load())
 		m_engine.patientdata.GetStudies(boost::bind(&finaco_mainFrame::fillstudiescallback, this, _1));
+
+	m_studies->Connect(wxEVT_LIST_ITEM_CHECKED, wxListEventHandler(finaco_mainFrame::m_studiesOnListItemChecked), NULL, this);
+	m_studies->Connect(wxEVT_LIST_ITEM_UNCHECKED, wxListEventHandler(finaco_mainFrame::m_studiesOnListItemUnchecked), NULL, this);
 }
 
 void finaco_mainFrame::OnDestinationEdit( wxCommandEvent& event )
@@ -65,6 +68,16 @@ void finaco_mainFrame::OnDestinationEdit( wxCommandEvent& event )
 void finaco_mainFrame::m_studiesOnListColClick( wxListEvent& event )
 {
 
+}
+
+void finaco_mainFrame::m_studiesOnListItemChecked(wxListEvent& event)
+{
+	m_engine.patientdata.SetStudyCheck(m_studies->GetItemText(event.GetIndex(), 4).ToUTF8().data(), true);
+}
+
+void finaco_mainFrame::m_studiesOnListItemUnchecked(wxListEvent& event)
+{
+	m_engine.patientdata.SetStudyCheck(m_studies->GetItemText(event.GetIndex(), 4).ToUTF8().data(), false);
 }
 
 void finaco_mainFrame::OnClear( wxCommandEvent& event )

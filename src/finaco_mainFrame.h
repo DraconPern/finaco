@@ -40,6 +40,8 @@ class finaco_mainFrame : public mainFrame
 
 		~finaco_mainFrame();
 
+		void m_studiesOnListItemChecked(wxListEvent& event);
+		void m_studiesOnListItemUnchecked(wxListEvent& event);
 		void FillDestinationList();
 		int fillstudiescallback(Study &study);
 
