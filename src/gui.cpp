@@ -451,7 +451,7 @@ updateCheck::updateCheck( wxWindow* parent, wxWindowID id, const wxString& title
 	wxBoxSizer* bSizer29;
 	bSizer29 = new wxBoxSizer( wxVERTICAL );
 	
-	m_needtoupgrade = new wxStaticText( this, wxID_ANY, _("A new version of dovo is available:"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_needtoupgrade = new wxStaticText( this, wxID_ANY, _("A new version of finaco is available:"), wxDefaultPosition, wxDefaultSize, 0 );
 	m_needtoupgrade->Wrap( -1 );
 	bSizer29->Add( m_needtoupgrade, 0, wxALL, 5 );
 	
@@ -469,7 +469,7 @@ updateCheck::updateCheck( wxWindow* parent, wxWindowID id, const wxString& title
 	m_staticText13->Wrap( -1 );
 	bSizer27->Add( m_staticText13, 0, wxALL, 5 );
 	
-	m_hyperlink11 = new wxHyperlinkCtrl( this, wxID_ANY, wxEmptyString, wxT("http://www.draconpern.com/software/dovo"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE );
+	m_hyperlink11 = new wxHyperlinkCtrl( this, wxID_ANY, wxEmptyString, wxT("http://www.draconpern.com/software/finaco"), wxDefaultPosition, wxDefaultSize, wxHL_DEFAULT_STYLE );
 	bSizer27->Add( m_hyperlink11, 0, wxALL, 5 );
 	
 	

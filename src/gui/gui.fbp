@@ -4337,7 +4337,7 @@
                                 <property name="gripper">0</property>
                                 <property name="hidden">0</property>
                                 <property name="id">wxID_ANY</property>
-                                <property name="label">A new version of dovo is available:</property>
+                                <property name="label">A new version of finaco is available:</property>
                                 <property name="max_size"></property>
                                 <property name="maximize_button">0</property>
                                 <property name="maximum_size"></property>
@@ -4710,7 +4710,7 @@
                                         <property name="subclass"></property>
                                         <property name="toolbar_pane">0</property>
                                         <property name="tooltip"></property>
-                                        <property name="url">http://www.draconpern.com/software/dovo</property>
+                                        <property name="url">http://www.draconpern.com/software/finaco</property>
                                         <property name="visited_color"></property>
                                         <property name="window_extra_style"></property>
                                         <property name="window_name"></property>
