@@ -14,6 +14,9 @@ void PatientData::createdb()
 {
 	if (sqlite3_open_v2(":memory:", &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, NULL) != SQLITE_OK)
 	{
+		if (db)
+			sqlite3_close(db);
+		
 		std::ostringstream msg;
 		msg << "Can't create database: " << sqlite3_errmsg(db);
 		throw std::runtime_error(msg.str().c_str());				
@@ -46,7 +49,11 @@ bool PatientData::Load()
 {
 	sqlite3 *backup;
 	if (sqlite3_open_v2("finaco.db", &backup, SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX, NULL) != SQLITE_OK)
+	{
+		if (backup)
+			sqlite3_close(backup);
 		return false;
+	}
 
 	sqlite3_backup *bk = sqlite3_backup_init(db, "main", backup, "main");
 	sqlite3_backup_step(bk, -1);
