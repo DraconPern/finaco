@@ -38,6 +38,7 @@ mainFrame( parent )
 	m_moveae->SetValue(wxConfig::Get()->Read("MoveAE"));
 	m_querydestination->SetStringSelection(wxConfig::Get()->Read("QueryDestination"));
 	m_movedestination->SetStringSelection(wxConfig::Get()->Read("MoveDestination"));
+	m_threads->SetValue(wxConfig::Get()->ReadLong("Threads", 4));
 
 	if(m_engine.patientdata.Load())
 		m_engine.patientdata.GetStudies(boost::bind(&finaco_mainFrame::fillstudiescallback, this, _1));
@@ -152,6 +153,7 @@ finaco_mainFrame::~finaco_mainFrame()
 	wxConfig::Get()->Write("MoveAE", m_moveae->GetValue());
 	wxConfig::Get()->Write("QueryDestination", m_querydestination->GetStringSelection());
 	wxConfig::Get()->Write("MoveDestination", m_movedestination->GetStringSelection());
+	wxConfig::Get()->Write("Threads", m_threads->GetValue());
 	wxConfig::Get()->Flush();
 
 	m_engine.patientdata.Save();
