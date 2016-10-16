@@ -34,7 +34,7 @@ PatientData::~PatientData()
 void PatientData::Save()
 {
 	sqlite3 *backup;
-	sqlite3_open_v2("patientdata.db", &backup, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, NULL);	
+	sqlite3_open_v2("finaco.db", &backup, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, NULL);	
 	sqlite3_backup *bk = sqlite3_backup_init(backup, "main", db, "main");
 	sqlite3_backup_step(bk, -1);
 	sqlite3_backup_finish(bk);
@@ -45,7 +45,7 @@ void PatientData::Save()
 bool PatientData::Load()
 {
 	sqlite3 *backup;
-	if (sqlite3_open_v2("patientdata.db", &backup, SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX, NULL) != SQLITE_OK)
+	if (sqlite3_open_v2("finaco.db", &backup, SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX, NULL) != SQLITE_OK)
 		return false;
 
 	sqlite3_backup *bk = sqlite3_backup_init(db, "main", backup, "main");

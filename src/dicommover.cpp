@@ -23,9 +23,9 @@
 
 
 
-DICOMMover::DICOMMover(PatientData &patientdata) 
+DICOMMover::DICOMMover(PatientData &patientdata)
 	: patientdata(patientdata)
-{			
+{
 	cancelEvent = doneEvent = false;
 }
 
@@ -35,9 +35,10 @@ DICOMMover::~DICOMMover()
 
 void DICOMMover::DoMoveAsync(DestinationEntry destination, std::string moveae, int threads)
 {
-	cancelEvent = doneEvent = false;
-	
-	this->m_destination = destination;	
+	SetDone(false);
+	ClearCancel();
+
+	this->m_destination = destination;
 	this->m_moveae = moveae;
 	this->m_threads = threads;
 
@@ -47,19 +48,17 @@ void DICOMMover::DoMoveAsync(DestinationEntry destination, std::string moveae, i
 }
 
 void DICOMMover::DoMoveThread(void *obj)
-{	
+{
 	DICOMMover *me = (DICOMMover *) obj;
 	if (me)
 	{
-		me->SetDone(false);
 		me->DoMove(me->m_destination, me->m_moveae, me->m_threads);
-		me->SetDone(true);		
-		me->ClearCancel();
+		me->SetDone(true);
 	}
 }
 
 void DICOMMover::DoMove(DestinationEntry destination, std::string moveae, int threads)
-{	
+{
 	OFLog::configure(OFLogger::OFF_LOG_LEVEL);
 
 	// get a list of studies
@@ -67,14 +66,14 @@ void DICOMMover::DoMove(DestinationEntry destination, std::string moveae, int th
 	for (std::vector<std::string>::iterator it = studies.begin() ; it != studies.end(); ++it)
 	{
 		// post them in the work
-		service.post(boost::bind(&DICOMMover::MoveStudy, this, *it));		
+		service.post(boost::bind(&DICOMMover::MoveStudy, this, *it));
 	}
 
 	// run 5 threads
 	boost::thread_group threadgroup;
 	for (int i = 0; i < threads; i++)
 		threadgroup.create_thread(boost::bind(&boost::asio::io_service::run, &service));
-	
+
 	// wait for everything to finish, Cancel() calls service stop and stops farther work from processing
 	threadgroup.join_all();
 }
@@ -88,7 +87,7 @@ int DICOMMover::fillstudies(Study &study)
 
 
 int DICOMMover::MoveStudy(std::string studyuid)
-{		
+{
 	class MyDcmSCU : public DcmSCU
 	{
 	public:
@@ -128,9 +127,9 @@ int DICOMMover::MoveStudy(std::string studyuid)
 	defaulttransfersyntax.push_back(UID_LittleEndianExplicitTransferSyntax);
 
 	scu.addPresentationContext(UID_MOVEStudyRootQueryRetrieveInformationModel, defaulttransfersyntax);
-	
+
 	OFCondition cond;
-	
+
 	if(scu.initNetwork().bad())
 		return 1;
 
@@ -138,21 +137,21 @@ int DICOMMover::MoveStudy(std::string studyuid)
 		return 1;
 
 	T_ASC_PresentationContextID pid = scu.findAnyPresentationContextID(UID_MOVEStudyRootQueryRetrieveInformationModel, UID_LittleEndianExplicitTransferSyntax);
-	
+
 	DcmDataset query;
 	query.putAndInsertString(DCM_QueryRetrieveLevel, "STUDY");
-	query.putAndInsertString(DCM_StudyInstanceUID, studyuid.c_str());	
+	query.putAndInsertString(DCM_StudyInstanceUID, studyuid.c_str());
 
 	OFList<RetrieveResponse*> responses;
 	scu.sendMOVERequest(pid, m_moveae.c_str(), &query, &responses);
 	scu.releaseAssociation();
-	
+
 	if (!responses.empty())
-	{				
+	{
 		if (responses.back()->m_numberOfRemainingSubops == 0 && responses.back()->m_numberOfFailedSubops == 0)
 			patientdata.SetStudyCheck(studyuid, false);
 	}
-	
+
 	// free it
 	OFIterator<RetrieveResponse*> itr = responses.begin();
 	while (itr != responses.end())
@@ -195,4 +194,3 @@ void DICOMMover::SetDone(bool state)
 	boost::mutex::scoped_lock lk(mutex);
 	doneEvent = state;
 }
-

@@ -26,14 +26,14 @@
 #endif
 
 
-DICOMQueryScanner::DICOMQueryScanner(PatientData &patientdata) 
+DICOMQueryScanner::DICOMQueryScanner(PatientData &patientdata)
 	: patientdata(patientdata)
 {
-	cancelEvent = doneEvent = false;		
+	cancelEvent = doneEvent = false;
 }
 
 DICOMQueryScanner::~DICOMQueryScanner()
-{	
+{
 }
 
 bool DICOMQueryScanner::ScanPatientName(std::string name, DestinationEntry &destination)
@@ -66,7 +66,7 @@ bool DICOMQueryScanner::ScanPatientName(std::string name, DestinationEntry &dest
 			if (scanner.IsCanceled())
 				waitForNextResponse = false;
 
-			return ret;			
+			return ret;
 		}
 	};
 
@@ -83,7 +83,7 @@ bool DICOMQueryScanner::ScanPatientName(std::string name, DestinationEntry &dest
 	scu.setACSETimeout(30);
 	scu.setDIMSETimeout(60);
 	scu.setDatasetConversionMode(true);
-	
+
 	OFList<OFString> defaulttransfersyntax;
 	defaulttransfersyntax.push_back(UID_LittleEndianExplicitTransferSyntax);
 
@@ -110,15 +110,18 @@ bool DICOMQueryScanner::ScanPatientName(std::string name, DestinationEntry &dest
 	scu.sendFINDRequest(pid, &query, NULL);
 
 	scu.releaseAssociation();
-	
+
 	return true;
 }
 
 void DICOMQueryScanner::DoQueryAsync(DestinationEntry &destination)
-{	
+{
+	SetDone(false);
+	ClearCancel();
+
 	m_destination = destination;
 	boost::thread t(DICOMQueryScanner::DoQueryThread, this);
-	t.detach();	
+	t.detach();
 }
 
 void DICOMQueryScanner::DoQueryThread(void *obj)
@@ -126,18 +129,16 @@ void DICOMQueryScanner::DoQueryThread(void *obj)
 	DICOMQueryScanner *me = (DICOMQueryScanner *) obj;
 	if(me)
 	{
-		me->SetDone(false);
-		me->DoQuery(me->m_destination);		
+		me->DoQuery(me->m_destination);
 		me->SetDone(true);
-		me->ClearCancel();
 	}
 
 }
 
 void DICOMQueryScanner::DoQuery(DestinationEntry &destination)
-{	
+{
 	OFLog::configure(OFLogger::OFF_LOG_LEVEL);
-	
+
 	// catch any access errors
 	try
 	{
@@ -151,7 +152,7 @@ void DICOMQueryScanner::DoQuery(DestinationEntry &destination)
 	{
 
 	}
-	
+
 }
 
 
