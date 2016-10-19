@@ -62,6 +62,8 @@ void DICOMMover::DoMove(DestinationEntry destination, std::string moveae, int th
 	OFLog::configure(OFLogger::OFF_LOG_LEVEL);
 
 	// get a list of studies
+	studies.clear();
+	service.reset();
 	patientdata.GetStudies(boost::bind(&DICOMMover::fillstudies, this, _1));
 	for (std::vector<std::string>::iterator it = studies.begin() ; it != studies.end(); ++it)
 	{
