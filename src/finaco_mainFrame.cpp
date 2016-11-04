@@ -40,11 +40,11 @@ mainFrame( parent )
 	m_movedestination->SetStringSelection(wxConfig::Get()->Read("MoveDestination"));
 	m_threads->SetValue(wxConfig::Get()->ReadLong("Threads", 4));
 
-	if(m_engine.patientdata.Load())
-		m_engine.patientdata.GetStudies(boost::bind(&finaco_mainFrame::fillstudiescallback, this, _1));
-
-	m_studies->Connect(wxEVT_LIST_ITEM_CHECKED, wxListEventHandler(finaco_mainFrame::m_studiesOnListItemChecked), NULL, this);
-	m_studies->Connect(wxEVT_LIST_ITEM_UNCHECKED, wxListEventHandler(finaco_mainFrame::m_studiesOnListItemUnchecked), NULL, this);
+	{
+		wxBusyInfo wait("Please wait, loading existing finaco.db ...");
+		m_engine.patientdata.createdb();
+		FillStudyList();
+	}		
 }
 
 void finaco_mainFrame::OnDestinationEdit( wxCommandEvent& event )
@@ -66,6 +66,20 @@ void finaco_mainFrame::OnDestinationEdit( wxCommandEvent& event )
 	}
 }
 
+
+void finaco_mainFrame::FillStudyList()
+{
+	wxBusyCursor wait;
+	m_studies->Disconnect(wxEVT_LIST_ITEM_CHECKED, wxListEventHandler(finaco_mainFrame::m_studiesOnListItemChecked), NULL, this);
+	m_studies->Disconnect(wxEVT_LIST_ITEM_UNCHECKED, wxListEventHandler(finaco_mainFrame::m_studiesOnListItemUnchecked), NULL, this);
+
+	m_studies->DeleteAllItems();
+	m_engine.patientdata.GetStudies(boost::bind(&finaco_mainFrame::fillstudiescallback, this, _1));
+
+	m_studies->Connect(wxEVT_LIST_ITEM_CHECKED, wxListEventHandler(finaco_mainFrame::m_studiesOnListItemChecked), NULL, this);
+	m_studies->Connect(wxEVT_LIST_ITEM_UNCHECKED, wxListEventHandler(finaco_mainFrame::m_studiesOnListItemUnchecked), NULL, this);
+}
+
 void finaco_mainFrame::m_studiesOnListColClick( wxListEvent& event )
 {
 
@@ -83,8 +97,29 @@ void finaco_mainFrame::m_studiesOnListItemUnchecked(wxListEvent& event)
 
 void finaco_mainFrame::OnClear( wxCommandEvent& event )
 {
+	wxBusyCursor wait;
 	m_studies->DeleteAllItems();
 	m_engine.patientdata.Clear();
+}
+
+void finaco_mainFrame::OnLoad(wxCommandEvent& event)
+{
+	wxFileDialog dlg(this, "Load...", wxEmptyString, wxEmptyString, "sqlite database (*.db)|*.db", wxFD_OPEN | wxRESIZE_BORDER | wxFD_FILE_MUST_EXIST);
+	if (dlg.ShowModal() == wxID_OK)
+	{
+		m_studies->DeleteAllItems();
+		m_engine.patientdata.Load(dlg.GetPath().fn_str());
+		FillStudyList();
+	}
+}
+
+void finaco_mainFrame::OnSave(wxCommandEvent& event)
+{
+	wxFileDialog dlg(this, "Save...", wxEmptyString, wxEmptyString, "sqlite database (*.db)|*.db", wxFD_SAVE | wxRESIZE_BORDER);
+	if (dlg.ShowModal() == wxID_OK)
+	{
+		m_engine.patientdata.Save(dlg.GetPath().fn_str());
+	}
 }
 
 void finaco_mainFrame::OnQuery( wxCommandEvent& event )
@@ -154,9 +189,7 @@ finaco_mainFrame::~finaco_mainFrame()
 	wxConfig::Get()->Write("QueryDestination", m_querydestination->GetStringSelection());
 	wxConfig::Get()->Write("MoveDestination", m_movedestination->GetStringSelection());
 	wxConfig::Get()->Write("Threads", m_threads->GetValue());
-	wxConfig::Get()->Flush();
-
-	m_engine.patientdata.Save();
+	wxConfig::Get()->Flush();	
 }
 
 void finaco_mainFrame::FillDestinationList()

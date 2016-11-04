@@ -6,26 +6,22 @@
 
 PatientData::PatientData()
 {
-	db = NULL;
-	createdb();
+	db = NULL;	
 }
 
 void PatientData::createdb()
 {
-	if (sqlite3_open_v2(":memory:", &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, NULL) != SQLITE_OK)
+	if (db)
+		sqlite3_close(db);
+
+	if (sqlite3_open_v2("finaco.db", &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL) != SQLITE_OK)
 	{
-		if (db)
-			sqlite3_close(db);
-		
 		std::ostringstream msg;
 		msg << "Can't create database: " << sqlite3_errmsg(db);
-		throw std::runtime_error(msg.str().c_str());				
-	}	
-	
-	sqlite3_exec(db, "CREATE TABLE patients (patid TEXT, patname TEXT, birthday TEXT, PRIMARY KEY (patid, patname))", NULL, NULL, NULL);
+		throw std::runtime_error(msg.str().c_str());
+	}
+			
 	sqlite3_exec(db, "CREATE TABLE studies (studyuid TEXT UNIQUE, patid TEXT, patname TEXT, studydesc TEXT, studydate TEXT, checked TEXT)", NULL, NULL, NULL);
-	sqlite3_exec(db, "CREATE TABLE series (seriesuid TEXT UNIQUE, studyuid TEXT, seriesdesc TEXT)", NULL, NULL, NULL);
-	sqlite3_exec(db, "CREATE TABLE instances (sopuid TEXT UNIQUE, seriesuid TEXT, filename TEXT, sopclassuid TEXT, transfersyntax TEXT)", NULL, NULL, NULL);
 }
 
 PatientData::~PatientData()
@@ -34,42 +30,40 @@ PatientData::~PatientData()
 		sqlite3_close(db);
 }
 
-void PatientData::Save()
-{
-	sqlite3 *backup;
-	sqlite3_open_v2("finaco.db", &backup, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_NOMUTEX, NULL);	
-	sqlite3_backup *bk = sqlite3_backup_init(backup, "main", db, "main");
-	sqlite3_backup_step(bk, -1);
-	sqlite3_backup_finish(bk);
-
-	sqlite3_close(backup);
-}
-
-bool PatientData::Load()
-{
-	sqlite3 *backup;
-	if (sqlite3_open_v2("finaco.db", &backup, SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX, NULL) != SQLITE_OK)
-	{
-		if (backup)
-			sqlite3_close(backup);
-		return false;
-	}
-
-	sqlite3_backup *bk = sqlite3_backup_init(db, "main", backup, "main");
-	sqlite3_backup_step(bk, -1);
-	sqlite3_backup_finish(bk);
-
-	sqlite3_close(backup);
-
-	return true;
-}
-
 void PatientData::Clear()
 {
-	if(db)
+	if (db)
 		sqlite3_close(db);
 
+	boost::filesystem::remove("finaco.db");
+
 	createdb();
+}
+
+bool PatientData::Load(boost::filesystem::path filename)
+{
+	sqlite3 *backup = NULL;
+	std::string p = boost::locale::conv::utf_to_utf<char>(filename.c_str());
+	sqlite3_open_v2(p.c_str(), &backup, SQLITE_OPEN_READONLY, NULL);
+	sqlite3_backup *bk = sqlite3_backup_init(db, "main", backup, "main");
+	int ret = sqlite3_backup_step(bk, -1);
+	sqlite3_backup_finish(bk);
+	sqlite3_close(backup);
+
+	return ret == SQLITE_DONE;
+}
+
+bool PatientData::Save(boost::filesystem::path filename)
+{
+	sqlite3 *backup = NULL;
+	std::string p = boost::locale::conv::utf_to_utf<char>(filename.c_str());
+	sqlite3_open_v2(p.c_str(), &backup, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, NULL);
+	sqlite3_backup *bk = sqlite3_backup_init(backup, "main", db, "main");
+	int ret = sqlite3_backup_step(bk, -1);
+	sqlite3_backup_finish(bk);
+	sqlite3_close(backup);
+
+	return ret == SQLITE_DONE;
 }
 
 int PatientData::AddPatient(std::string patid, std::string patname, std::string birthday)
