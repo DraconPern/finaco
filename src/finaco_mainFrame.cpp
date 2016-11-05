@@ -22,7 +22,7 @@ mainFrame( parent )
 	m_studies->InsertColumn(5, "Status");
 	m_studies->EnableCheckboxes();
 
-	m_studies->SetColumnWidth(1, wxLIST_AUTOSIZE);
+	m_studies->SetColumnWidth(0, wxLIST_AUTOSIZE);
 	m_studies->SetColumnWidth(1, 200);
 	m_studies->SetColumnWidth(2, 100);
 	m_studies->SetColumnWidth(3, 200);
@@ -108,7 +108,8 @@ void finaco_mainFrame::OnLoad(wxCommandEvent& event)
 	if (dlg.ShowModal() == wxID_OK)
 	{
 		m_studies->DeleteAllItems();
-		m_engine.patientdata.Load(dlg.GetPath().fn_str());
+		boost::filesystem::path p(dlg.GetPath().fn_str());
+		m_engine.patientdata.Load(p);
 		FillStudyList();
 	}
 }
@@ -118,7 +119,8 @@ void finaco_mainFrame::OnSave(wxCommandEvent& event)
 	wxFileDialog dlg(this, "Save...", wxEmptyString, wxEmptyString, "sqlite database (*.db)|*.db", wxFD_SAVE | wxRESIZE_BORDER);
 	if (dlg.ShowModal() == wxID_OK)
 	{
-		m_engine.patientdata.Save(dlg.GetPath().fn_str());
+		boost::filesystem::path p(dlg.GetPath().fn_str());
+		m_engine.patientdata.Save(p);
 	}
 }
 
